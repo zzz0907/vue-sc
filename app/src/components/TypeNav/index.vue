@@ -1,7 +1,7 @@
 <template>
   <!-- 商品分类导航 -->
   <div class="type-nav">
-    <div class="container">
+    <div class="container" @mouseleave="leaveshow" @mouseenter="entershow">
       <h2 class="all">全部商品分类</h2>
       <nav class="nav">
         <a href="###">服装城</a>
@@ -13,29 +13,32 @@
         <a href="###">有趣</a>
         <a href="###">秒杀</a>
       </nav>
-      <div class="sort">
-        <div class="all-sort-list2"  @click="goSearch">
-          <div class="item" v-for="(c1,index) in categoryList" :key="c1.categoryId" :class="{cur:currentIndex == index}">
-            <h3 @mouseenter="changeIndex(index)" @mouseleave="currentIndex=-1">
-              <a @click="goSearch">{{c1.categoryName}}</a>
-            </h3>
-            <div class="item-list clearfix" >
-              <div class="subitem"  v-for="c2 in c1.categoryChild" :key="c2.categoryId">
-                <dl class="fore">
-                  <dt>
-                    <a >{{c2.categoryName}}</a>
-                  </dt>
-                  <dd>
-                    <em v-for="c3 in c2.categoryChild" :key="c3.categoryId">
-                      <a >{{c3.categoryName}}</a>
-                    </em>
-                  </dd>
-                </dl>
+      <transition name="sort">
+        <div class="sort" v-show="show">
+          <!-- 利用事件委派+编程式导航实现路由的跳转与传递参数 -->
+          <div class="all-sort-list2" @click="goSearch">
+            <div class="item" v-for="(c1,index) in categoryList" :key="c1.categoryId" :class="{cur:currentIndex == index}">
+              <h3 @mouseenter="changeIndex(index)" @mouseleave="currentIndex=-1">
+                <a :data-categoryName='c1.categoryName' :data-category1Id="c1.categoryId">{{c1.categoryName}}</a>
+              </h3>
+              <div class="item-list clearfix" >
+                <div class="subitem"  v-for="c2 in c1.categoryChild" :key="c2.categoryId">
+                  <dl class="fore">
+                    <dt>
+                      <a :data-categoryName='c2.categoryName' :data-category2Id="c2.categoryId">{{c2.categoryName}}</a>
+                    </dt>
+                    <dd>
+                      <em v-for="c3 in c2.categoryChild" :key="c3.categoryId">
+                        <a :data-categoryName='c3.categoryName' :data-category3Id="c3.categoryId">{{c3.categoryName}}</a>
+                      </em>
+                    </dd>
+                  </dl>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </transition>
     </div>
   </div>
 </template>
@@ -50,7 +53,8 @@ export default {
     return {
       
       // 存储用户鼠标移上哪一个一级分类
-      currentIndex:-1
+      currentIndex:-1,
+      show:true
     }
   },
   methods: {
@@ -61,14 +65,54 @@ export default {
       //函数节流:在20MS时间之内只能执行一次
       this.currentIndex = index;
     }, 20),
-    goSearch(){
-      this.$router.push('/search')
+    goSearch(event){
+      // 最好的解决方案：编程式导航+事件委派
+      // 存在一些问题：事件委派，是把全部的子节点【h3、dt、dl、em】的事件委派给父亲节点
+      // 点击a标签的时候，才会进行路由跳转【怎么能确定点击的一定是a标签】
+      // 如何区分是一级、二级、三级的a标签
+
+      // 在a标签中加入:data-categoryName='c1.categoryName'自定义属性
+      let element = event.target;
+      // 获取到当前出发这个事件的节点【h3、a、dt、dl】，需要带有data-categoryName这样的节点一定是a标签
+      // 节点有一个属性dataset属性，可以获取节点的自定义属性和属性值
+      let {categoryname,category1id,category2id,category3id} = element.dataset;
+      if(categoryname){
+        // 整理路由跳转的参数
+        let location = {name:'search'}
+        let query = {categoryName:categoryname}
+        if(category1id){
+          query.category1Id = category1id
+        }else if(category2id){
+          query.category2Id = category2id
+        }else{
+          query.category3Id = category3id
+        }
+        
+        if(this.$route.params){
+          location.params = this.$route.params
+          location.query = query
+          this.$router.push(location)
+        }
+      }
+    },
+    entershow(){
+      if(this.$route.path !='/home'){
+      this.show=true
+    }
+    },
+    leaveshow(){
+      if(this.$route.path !='/home'){
+      this.show=false
+    }
     }
   },
   // 组件挂载完毕，可以向服务器发请求
   mounted() {
-    // 通知vuex发请求，获取数据，存储于仓库中
-    this.$store.dispatch("categoryList");
+
+    if(this.$route.path !='/home'){
+      this.show=false
+    }
+   
   },
   computed: {
     ...mapState({
@@ -203,6 +247,15 @@ export default {
           background: pink;
         }
       }
+    }
+    .sort-enter{
+      height: 0;
+    }
+    .sort-enter-to{
+      height: 461px;
+    }
+    .sort-enter-active{
+      transition: all .5s linear;
     }
   }
 }

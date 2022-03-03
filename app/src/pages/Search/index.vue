@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h1>params参数</h1>
+    <TypeNav/>
   </div>
 </template>
 
