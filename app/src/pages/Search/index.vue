@@ -17,19 +17,21 @@
             <li class="with-x" v-if="searchParams.keyword">{{searchParams.keyword}}<i @click="removeKeyWord">x</i></li>
             <!-- 品牌的面包屑 -->
             <li class="with-x" v-if="searchParams.trademark">{{searchParams.trademark.split(":")[1]}}<i @click="removeTrademark">x</i></li>
+            <!-- 售卖属性值展示 -->
+            <li class="with-x" v-for="(attrValue,index) in searchParams.props" :key="index">{{attrValue.split(":")[1]}}<i @click="removeValue(index)">x</i></li>
           </ul>
         </div>
 
         <!--selector-->
-        <SearchSelector @trademarkInfo="trademarkInfo"/>
+        <SearchSelector @trademarkInfo="trademarkInfo" @attrInfo="attrInfo"/>
 
         <!--details-->
         <div class="details clearfix">
           <div class="sui-navbar">
             <div class="navbar-inner filter">
               <ul class="sui-nav">
-                <li class="active">
-                  <a href="#">综合</a>
+                <li :class="{active:isOne}" @click="changeOrder('1')">
+                  <a>综合<span class="iconfont" :class="{'icon-up':isAsc ,'icon-down':isDesc}" v-show="isOne"></span></a>
                 </li>
                 <li>
                   <a href="#">销量</a>
@@ -40,23 +42,20 @@
                 <li>
                   <a href="#">评价</a>
                 </li>
-                <li>
-                  <a href="#">价格⬆</a>
-                </li>
-                <li>
-                  <a href="#">价格⬇</a>
+                <li :class="{active:isTwo}" @click="changeOrder('2')">
+                  <a>价格<span class="iconfont" :class="{'icon-up':isAsc ,'icon-down':isDesc}" v-show="isTwo"></span></a>
                 </li>
               </ul>
             </div>
           </div>
+          <!-- 销售产品列表 -->
           <div class="goods-list">
             <ul class="yui3-g">
               <li class="yui3-u-1-5" v-for="good in goodsList" :key="good.id">
                 <div class="list-wrap">
                   <div class="p-img">
-                    <a href="item.html" target="_blank"
-                      ><img :src="good.defaultImg"
-                    /></a>
+                    <router-link :to="`/detail/${good.id}`">
+                      <img :src="good.defaultImg"/></router-link>
                   </div>
                   <div class="price">
                     <strong>
@@ -65,12 +64,7 @@
                     </strong>
                   </div>
                   <div class="attr">
-                    <a
-                      target="_blank"
-                      href="item.html"
-                      title="促销信息，下单即赠送三个月CIBN视频会员卡！【小米电视新品4A 58 火爆预约中】"
-                      >{{ good.title }}</a
-                    >
+                   <router-link :to="`/detail/${good.id}`">{{ good.title }}</router-link>
                   </div>
                   <div class="commit">
                     <i class="command">已有<span>2000</span>人评价</i>
@@ -90,35 +84,8 @@
               </li>
             </ul>
           </div>
-          <div class="fr page">
-            <div class="sui-pagination clearfix">
-              <ul>
-                <li class="prev disabled">
-                  <a href="#">«上一页</a>
-                </li>
-                <li class="active">
-                  <a href="#">1</a>
-                </li>
-                <li>
-                  <a href="#">2</a>
-                </li>
-                <li>
-                  <a href="#">3</a>
-                </li>
-                <li>
-                  <a href="#">4</a>
-                </li>
-                <li>
-                  <a href="#">5</a>
-                </li>
-                <li class="dotted"><span>...</span></li>
-                <li class="next">
-                  <a href="#">下一页»</a>
-                </li>
-              </ul>
-              <div><span>共10页&nbsp;</span></div>
-            </div>
-          </div>
+          <!-- 分页器 -->
+          <Pagination  :pageNo="searchParams.pageNo"  :pageSize="searchParams.pageSize" :total="total" :continues="5" @getPageNo="getPageNo"/>
         </div>
       </div>
     </div>
@@ -127,7 +94,7 @@
 
 <script>
 import SearchSelector from "./SearchSelector/SearchSelector";
-import { mapGetters } from "vuex";
+import { mapGetters,mapState } from "vuex";
 export default {
   name: "Search",
   data() {
@@ -146,7 +113,7 @@ export default {
         //第几页
         pageNo: 1,
         //每一页展示条数
-        pageSize: 10,
+        pageSize: 3,
         //平台属性的操作
         props: [],
         //品牌
@@ -166,6 +133,22 @@ export default {
   },
   computed: {
     ...mapGetters(["goodsList"]),
+    isOne(){
+      return this.searchParams.order.indexOf("1") != -1
+    },
+    isTwo(){
+      return this.searchParams.order.indexOf("2") != -1
+    },
+    isAsc(){
+      return this.searchParams.order.indexOf("asc") != -1
+    },
+    isDesc(){
+      return this.searchParams.order.indexOf("desc") != -1
+    },
+    // 获取search展示产品一共多少数据
+    ...mapState({
+      total:state=>state.search.searchList.total
+    })
   },
   methods: {
     getData(){
@@ -200,7 +183,41 @@ export default {
     removeTrademark(){
       this.searchParams.trademark = undefined;
       this.getData()
-    }
+    },
+    // 收集平台属性的地方
+    attrInfo(attr,attrValue){
+      let props = `${attr.attrId}:${attrValue}:${attr.attrName}`
+      // 数组去重
+      if(this.searchParams.props.indexOf(props) == -1){
+        this.searchParams.props.push(props)
+      }
+      this.getData()
+    },
+    removeValue(index){
+      this.searchParams.props.splice(index,1)
+      this.getData()
+    },
+    changeOrder(flag){
+      // flag形参：它是一个标记，代表用户点击的是综合 还是价格
+      let originOrder = this.searchParams.order
+      let originFlag = originOrder.split(":")[0]
+      let originSort = originOrder.split(":")[1]
+      let newOrder = ''
+      if(flag == originFlag){
+        newOrder = `${originFlag}:${originSort =="desc"?"asc":"desc"}`
+      }else{
+        newOrder = `${flag}:${'desc'}`
+      }
+      this.searchParams.order = newOrder
+      this.getData()
+    },
+    // 自定义事件的回调函数 ---获取当前第几页
+    getPageNo(pageNo) {
+      //整理带给服务器参数
+      this.searchParams.pageNo = pageNo;
+      //再次发请求
+      this.getData();
+    },
   },
   watch:{
     // 监听路由信息是否发生变化，如果发生变化，再次发起请求
@@ -464,92 +481,7 @@ export default {
         }
       }
 
-      .page {
-        width: 733px;
-        height: 66px;
-        overflow: hidden;
-        float: right;
-
-        .sui-pagination {
-          margin: 18px 0;
-
-          ul {
-            margin-left: 0;
-            margin-bottom: 0;
-            vertical-align: middle;
-            width: 490px;
-            float: left;
-
-            li {
-              line-height: 18px;
-              display: inline-block;
-
-              a {
-                position: relative;
-                float: left;
-                line-height: 18px;
-                text-decoration: none;
-                background-color: #fff;
-                border: 1px solid #e0e9ee;
-                margin-left: -1px;
-                font-size: 14px;
-                padding: 9px 18px;
-                color: #333;
-              }
-
-              &.active {
-                a {
-                  background-color: #fff;
-                  color: #e1251b;
-                  border-color: #fff;
-                  cursor: default;
-                }
-              }
-
-              &.prev {
-                a {
-                  background-color: #fafafa;
-                }
-              }
-
-              &.disabled {
-                a {
-                  color: #999;
-                  cursor: default;
-                }
-              }
-
-              &.dotted {
-                span {
-                  margin-left: -1px;
-                  position: relative;
-                  float: left;
-                  line-height: 18px;
-                  text-decoration: none;
-                  background-color: #fff;
-                  font-size: 14px;
-                  border: 0;
-                  padding: 9px 18px;
-                  color: #333;
-                }
-              }
-
-              &.next {
-                a {
-                  background-color: #fafafa;
-                }
-              }
-            }
-          }
-
-          div {
-            color: #333;
-            font-size: 14px;
-            float: right;
-            width: 241px;
-          }
-        }
-      }
+      
     }
   }
 }
