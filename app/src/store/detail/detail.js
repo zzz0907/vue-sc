@@ -1,7 +1,10 @@
 import {reqAddOrUpdateShopCart, reqGoodsInfo} from '@/api'
+// 封装游客身份模块uuid---->生成一个随机字符串（不能在变了）
+import {getUUID} from '@/utils/uuid_token'
 // state：仓库存储数据
 const state = {
-    goodInfo:{}
+    goodInfo:{},
+    uuid_token:getUUID()
 }
 // mutations:修改state的唯一手段
 const mutations = {
