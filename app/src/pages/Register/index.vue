@@ -3,7 +3,7 @@
     <!-- 注册内容 -->
     <div class="register">
       <h3>注册新用户
-        <span class="go">我有账号，去 <a href="login.html" target="_blank">登陆</a>
+        <span class="go">我有账号，去 <router-link to="/login" >登陆</router-link>
         </span>
       </h3>
       <div class="content">
@@ -29,7 +29,7 @@
       </div>
       <div class="controls">
         <input name="m1" type="checkbox" :checked="agree">
-        <span>同意协议并注册《尚品汇用户协议》</span>
+        <span>同意协议并注册《商城用户协议》</span>
         <span class="error-msg">错误提示信息</span>
       </div>
       <div class="btn">
@@ -84,7 +84,7 @@
       async userRegister(){
         try {
           const {phone,code,password,password1} = this;
-          (phone&&code&&password==password1) && await this.$store.dispatch("userRegister",{phone,code,password})
+          (phone&&code&&password==password1) && await this.$store.dispatch("userRegister",{phone,code,password})&&
           this.$router.push('/login')
         } catch (error) {
           console.log(error.message)

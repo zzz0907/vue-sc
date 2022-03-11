@@ -6,14 +6,17 @@
         <div class="loginList">
           <p>ZZZ商城欢迎您！</p>
           <!-- 没有用户名：未登录 -->
-          <p>
+          <p v-if="!userName">
             <span>请</span>
             <!-- 声明式导航：router-link务必要有to属性 -->
             <router-link to="/login">登录</router-link>
             <router-link class="register" to="/register">免费注册</router-link>
           </p>
           <!-- 登录了 -->
-          
+          <p v-else>
+              <a>{{userName}}</a>
+              <a class="register" @click="logout">退出登录</a>
+          </p>
         </div>
         <div class="typeList">
           <router-link to="/center/myorder">我的订单</router-link>
@@ -79,6 +82,15 @@ export default {
             this.$router.push(location)
           }
           
+        },
+        async logout(){
+          try {
+            await this.$store.dispatch('userLogout')
+            this.$router.push('/home')
+          } catch (error) {
+            
+          }
+          
         }
     },
     mounted() {
@@ -86,6 +98,11 @@ export default {
         this.keyword=""
       })
     },
+    computed:{
+      userName(){
+        return this.$store.state.user.userInfo.name
+      }
+    }
 };
 </script>
 
