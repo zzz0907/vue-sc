@@ -78,8 +78,12 @@
       async userLogin(){
         try {
           const {phone,password} = this;
+          let toPath = this.$route.query.redirect || "/hoome";
           (phone&&password)&&(await this.$store.dispatch('userLogin',{phone,password}))&&
-          this.$router.push('/home')
+          // 登录路由组件：看路由中是否包含query参数 有：转到query参数指定路由 没有：转到home
+          
+          this.$router.push(toPath)
+          // this.$router.push('/home')
         } catch (error) {
           alert(error.message)
         }
