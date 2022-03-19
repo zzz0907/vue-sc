@@ -28,3 +28,19 @@ vue2.0 + vue-router + vuex + axios + mock.js(模拟数据) + ES6 + less
 7)学会使用mockjs模拟后台数据接口
 
 ## 预览
+登录页面
+![Image text](./images/1.png)
+订单页面
+![Image text](./images/2.png)
+购物车页面
+![Image text](./images/3.png)
+结算页面
+![Image text](./images/4.png)
+商品页面
+![Image text](./images/5.png)
+注册页面
+![Image text](./images/6.png)
+home主页
+![Image text](./images/7.png)
+搜索页面
+![Image text](./images/8.png)
