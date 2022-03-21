@@ -29,7 +29,7 @@ vue2.0 + vue-router + vuex + axios + mock.js(模拟数据) + ES6 + less
 
 ## 预览
 登录页面
-![Image text](./images/1.png)
+![Image text](./images/a.png)
 订单页面
 ![Image text](./images/2.png)
 购物车页面
